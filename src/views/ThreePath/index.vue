@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { PathPointList } from './PathPointList.js'
 import { PathTubeGeometry } from './PathTubeGeometry.js'
 
@@ -28,6 +29,7 @@ let raycaster: THREE.Raycaster
 let mouse: THREE.Vector2
 let plane: THREE.Plane
 let planeIntersectPoint: THREE.Vector3
+let controls: OrbitControls
 
 const initThree = () => {
   // 创建场景
@@ -36,12 +38,12 @@ const initThree = () => {
 
   // 创建相机
   camera = new THREE.PerspectiveCamera(
-    75,
+    60,
     canvasContainer.value!.clientWidth / canvasContainer.value!.clientHeight,
     0.1,
     1000
   )
-  camera.position.z = 5
+  camera.position.set(0, 0, 8)
   camera.lookAt(0, 0, 0);
 
   // 创建渲染器
@@ -56,6 +58,22 @@ const initThree = () => {
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
   directionalLight.position.set(1, 1, 1)
   scene.add(directionalLight)
+
+  // 添加网格辅助线（坐标平面）
+  const gridHelper = new THREE.GridHelper(15, 15, 0x888888, 0xcccccc)
+  gridHelper.rotation.x = Math.PI / 2
+  scene.add(gridHelper)
+
+  // 添加坐标轴辅助线（红色X轴，绿色Y轴，蓝色Z轴）
+  // const axesHelper = new THREE.AxesHelper(5)
+  // scene.add(axesHelper)
+
+  // 初始化轨道控制器（场景旋转）
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+  controls.dampingFactor = 0.05
+  controls.enableZoom = true
+  controls.enablePan = true
 
   // 初始化射线投射器和鼠标向量
   raycaster = new THREE.Raycaster()
@@ -72,6 +90,7 @@ const initThree = () => {
   // 动画循环
   const animate = () => {
     requestAnimationFrame(animate)
+    controls.update()
     renderer.render(scene, camera)
   }
   animate()
